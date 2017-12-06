@@ -1,0 +1,108 @@
+<html>
+<head>
+    <title>AngularJS</title>
+    <style>
+        .row {
+            padding: 2em;
+        }
+
+    </style>
+    <link rel="stylesheet" href="./bower_components/bootstrap-css-only/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
+
+
+</head>
+<body ng-app="myApp" class="ng-cloak">
+<div class="generic-container" ng-controller="UserController as controller">
+
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <md-toolbar class="md-warn">
+            <div class="panel-heading">
+                <span class="lead">User list </span>
+            </div>
+        </md-toolbar>
+        <div class="tablecontainer">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Password</th>
+                    <th>Balance</th>
+                    <th width="20%"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="u in controller.users">
+                    <td><span ng-bind="u.id"></span></td>
+                    <td><span ng-bind="u.username"></span></td>
+                    <td><span ng-bind="u.password"></span></td>
+                    <td><span ng-bind="u.balance"></span></td>
+                    <td>
+                        <md-button class="md-raised md-primary" type="button" ng-click="controller.edit(u.id)" class="btn btn-success custom-width" data-target="#userModal" data-toggle="modal">Edit</md-button>
+                        <md-button class="md-raised md-warn" type="button" ng-click="controller.remove(u.id)" class="btn btn-danger custom-width">Remove</md-button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <md-toolbar class="md-warn">
+            <div class="panel-heading"><span class="lead">Registration</span></div>
+        </md-toolbar>
+        <div class="formcontainer">
+            <form ng-submit="controller.submit()" name="myForm" class="form-horizontal">
+                <input type="hidden" ng-model="controller.user.id" />
+                <div class="row">
+                    <md-input-container>
+                        <label class="col-md-2 control-lable" for="uname">Name</label>
+                        <input type="text" ng-model="controller.user.username" id="uname" class="username form-control input-sm" placeholder="Enter your name" required ng-minlength="3"/>
+                    </md-input-container>
+                </div>
+
+
+                <div class="row">
+                    <md-input-container>
+                        <label class="col-md-2 control-lable" for="password">Password</label>
+                        <input type="password" ng-model="controller.user.password" id="password" class="form-control input-sm" placeholder="Enter your Password" required ng-minlength="3"/>
+                    </md-input-container>
+                </div>
+
+                <div class="row">
+                    <md-input-container>
+                        <label class="col-md-2 control-lable" for="balance">Balance</label>
+                        <input type="number" ng-model="controller.user.balance" id="balance" class="form-control" placeholder="Enter your balance" min="0" required/>
+                    </md-input-container>
+                </div>
+
+                <div class="row">
+                    <div class="form-actions floatRight">
+                        <md-button class="md-primary md-raised" type="submit"  value="{{!controller.user.id ? 'Add' : 'Update'}}" class="btn btn-primary btn-sm" ng-disabled="myForm.$invalid">Submit</md-button>
+                        <md-button class="md-raised" type="button" ng-click="controller.reset()" ng-disabled="myForm.$pristine">Reset Form</md-button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="./bower_components/angular/angular.min.js"></script>
+<script type="text/javascript" src="./bower_components/angular-resource/angular-resource.min.js"></script>
+<script type="text/javascript" src="./bower_components/lodash/dist/lodash.min.js"></script>
+<script type="text/javascript" src="./app/app.js"></script>
+<script type="text/javascript" src="./app/services.js"></script>
+<script type="text/javascript" src="./app/controllers.js"></script>
+</body>
+</html>

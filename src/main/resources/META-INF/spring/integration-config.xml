@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
+       xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+       xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+	http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd
+	http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+	http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.elosztott" />
+
+    <!--get files from folder-->
+    <int:channel id="UserInboundChannel" />
+
+    <int-file:inbound-channel-adapter id="producer-file-adapter"
+                                      channel="UserInboundChannel" directory="file:c://inbound"
+                                      prevent-duplicates="true">
+        <int:poller fixed-rate="1000" />
+    </int-file:inbound-channel-adapter>
+
+    <!--filter for JSON files-->
+    <int:filter input-channel="UserInboundChannel" output-channel="HeaderEnricherChannel"
+                ref="selector" />
+    <bean id="selector" class="com.elosztott.integration.JsonFilter" />
+
+
+    <!--add header field to determine JSON type-->
+    <int:channel id="HeaderEnricherChannel" />
+
+    <int:header-enricher input-channel="HeaderEnricherChannel" output-channel="JsonRouterChannel">
+        <int:header name="type" method="enrichType" ref="headerEnricher"/>
+    </int:header-enricher>
+    <bean id="headerEnricher" class="com.elosztott.integration.HeaderEnricher"/>
+
+
+    <!--Route message to the correct type for parsing-->
+    <int:channel id="JsonRouterChannel"/>
+
+    <int:header-value-router input-channel="JsonRouterChannel" header-name="type">
+        <int:mapping value="User" channel="UserParserChannel"/>
+        <int:mapping value="Transaction" channel="TransactionParserChannel"/>
+        <int:mapping value="Unknown" channel="replyChannel"/>
+    </int:header-value-router>
+
+
+<!--TRANSACTION-->
+
+    <!--transform transaction json to object-->
+    <int:channel id="TransactionParserChannel"/>
+
+    <int:json-to-object-transformer input-channel="TransactionParserChannel"
+                                    output-channel="ApplyTransactionChannel"
+                                    type="com.elosztott.model.Transaction"/>
+
+    <!--applying transaction through gateway-->
+    <int:channel id="ApplyTransactionChannel"/>
+
+    <int:gateway id="transactionService" service-interface="com.elosztott.integration.TransactionService"
+                 default-request-channel="ApplyTransactionChannel" default-reply-channel="replyChannel" />
+
+    <int:transformer input-channel="ApplyTransactionChannel"
+                     output-channel="replyChannel" ref="applyTransaction" />
+    <bean id="applyTransaction" class="com.elosztott.integration.ApplyTransaction" />
+
+<!--USER-->
+    <!--transform jsons to User objects-->
+    <int:channel id="UserParserChannel"/>
+    <int:json-to-object-transformer input-channel="UserParserChannel"
+                                    output-channel="StoreUserChannel"
+                                    type="com.elosztott.model.User"/>
+
+    <!--store Users in repository-->
+    <int:channel id="StoreUserChannel" />
+
+    <int:gateway id="storeService" service-interface="com.elosztott.integration.StoreUser"
+                 default-request-channel="StoreUserChannel" default-reply-channel="replyChannel" />
+
+    <int:transformer input-channel="StoreUserChannel"
+                     output-channel="replyChannel" ref="storeInDB" />
+    <bean id="storeInDB" class="com.elosztott.integration.StoreInDB" />
+
+    <int:channel id="replyChannel" />
+
+    <int-file:outbound-channel-adapter channel="replyChannel" id="outbound" directory="file:c://outbound"/>
+
+</beans>
+
